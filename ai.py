@@ -1,18 +1,5 @@
 import random
 
-opponent = {'b': 'w', 'w': 'b'}
-
-
-test_board = [
-'________',
-'b___b___',
-'_w_w_w__',
-'________',
-'_w_w_W__',
-'________',
-'_W_w____',
-'____B___']
-
 
 def display(board):
     for line in board:
