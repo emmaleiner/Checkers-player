@@ -1,11 +1,13 @@
+import operator
 import random
+
 
 
 def display(board):
     for line in board:
         print(line)
 
-class Move(object):
+class Jump(object):
     def __init__(self, row, col, board, children=None):
         self.row = row
         self.col = col
@@ -17,7 +19,7 @@ class Move(object):
     def __repr__(self):
         return "({}, {})".format(self.row, self.col)
     def add_child(self, node):
-        assert isinstance(node, Move)
+        assert isinstance(node, Jump)
         self.children.append(node)
     def get_paths(self):
         children = self.children.copy()
@@ -90,28 +92,6 @@ def update_board(board, move, color):
     return updated_board
 
 
-def score(board, move, color):
-    current_num_opponents = 0
-    next_num_opponents = 0
-
-    if color == 'b':
-        opponent = 'w'
-    elif color == 'w':
-        opponent = 'b'
-
-    for row in board:
-        for val in row:
-            if val.lower() == opponent:
-                current_num_opponents += 1
-
-    for row in update_board(board, move, color):
-        for val in row:
-            if val.lower() == opponent:
-                next_num_opponents += 1
-
-    return current_num_opponents - next_num_opponents
-
-
 def capturing_moves(board, row, col, color, is_king):
     N = len(board)
     moves = []
@@ -139,29 +119,29 @@ def capturing_moves(board, row, col, color, is_king):
                         updated_board = update_board(board, move, color)
 
                         # this new position becomes a possible move
-                        moves.append(Move(row-2, col+2, updated_board))
+                        moves.append(Jump(row-2, col+2, updated_board))
                 if col > 1:
                     if board[row-1][col-1].lower() == 'w' and board[row-2][col-2] == '_':
                         move = [(row, col), (row-2, col-2)]
                         updated_board = update_board(board, move, color)
-                        moves.append(Move(row-2, col-2, updated_board))
+                        moves.append(Jump(row-2, col-2, updated_board))
 
         else:
             player = color
 
-        # Moves for "everybody"
+        # Jumps for "everybody"
         # allow moves only if not on the edges
         if row < N-2:
             if col < N-2:
                 if board[row+1][col+1].lower() == 'w' and board[row+2][col+2] == '_':
                     move = [(row, col), (row+2, col+2)]
                     updated_board = update_board(board, move, color)
-                    moves.append(Move(row+2, col+2, updated_board))
+                    moves.append(Jump(row+2, col+2, updated_board))
             if col > 1:
                 if board[row+1][col-1].lower() == 'w' and board[row+2][col-2] == '_':
                     move = [(row, col), (row+2, col-2)]
                     updated_board = update_board(board, move, color)
-                    moves.append(Move(row+2, col-2, updated_board))
+                    moves.append(Jump(row+2, col-2, updated_board))
 
 
     # basically the same, but for whites
@@ -179,12 +159,12 @@ def capturing_moves(board, row, col, color, is_king):
                     if board[row+1][col-1].lower() == 'b' and board[row+2][col-2] == '_':
                         move = [(row, col), (row+2, col-2)]
                         updated_board = update_board(board, move, color)
-                        moves.append(Move(row+2, col-2, updated_board))
+                        moves.append(Jump(row+2, col-2, updated_board))
                 if col < N-2:
                     if board[row+1][col+1].lower() == 'b' and board[row+2][col+2] == '_':
                         move = [(row, col), (row+2, col+2)]
                         updated_board = update_board(board, move, color)
-                        moves.append(Move(row+2, col+2, updated_board))
+                        moves.append(Jump(row+2, col+2, updated_board))
 
         else:
             player = color
@@ -194,12 +174,12 @@ def capturing_moves(board, row, col, color, is_king):
                 if board[row-1][col-1].lower() == 'b' and board[row-2][col-2] == '_':
                     move = [(row, col), (row-2, col-2)]
                     updated_board = update_board(board, move, color)
-                    moves.append(Move(row-2, col-2, updated_board))
+                    moves.append(Jump(row-2, col-2, updated_board))
             if col < N-2:
                 if board[row-1][col+1].lower() == 'b' and board[row-2][col+2] == '_':
                     move = [(row, col), (row-2, col+2)]
                     updated_board = update_board(board, move, color)
-                    moves.append(Move(row-2, col+2, updated_board))
+                    moves.append(Jump(row-2, col+2, updated_board))
 
     return moves, is_king
 
@@ -223,13 +203,13 @@ def non_capturing_moves(board, row, col, color, is_king):
                     if board[row-1][col+1] == '_':
                         move = [(row, col), (row-1, col+1)]
                         updated_board = update_board(board, move, color)
-                        moves.append(Move(row-1, col+1, updated_board))
+                        moves.append(Jump(row-1, col+1, updated_board))
                         
                 if col > 0:
                     if board[row-1][col-1] == '_':
                         move = [(row, col), (row-1, col-1)]
                         updated_board = update_board(board, move, color)
-                        moves.append(Move(row-1, col-1, updated_board))
+                        moves.append(Jump(row-1, col-1, updated_board))
 
         else:
             player = color
@@ -239,12 +219,12 @@ def non_capturing_moves(board, row, col, color, is_king):
                 if board[row+1][col+1] == '_':
                     move = [(row, col), (row+1, col+1)]
                     updated_board = update_board(board, move, color)
-                    moves.append(Move(row+1, col+1, updated_board))
+                    moves.append(Jump(row+1, col+1, updated_board))
             if col > 0:
                 if board[row+1][col-1] == '_':
                     move = [(row, col), (row+1, col-1)]
                     updated_board = update_board(board, move, color)
-                    moves.append(Move(row+1, col-1, updated_board))
+                    moves.append(Jump(row+1, col-1, updated_board))
                     
     if color == 'w':
         if row == 0:
@@ -259,12 +239,12 @@ def non_capturing_moves(board, row, col, color, is_king):
                     if board[row+1][col-1] == '_':
                         move = [(row, col), (row+1, col-1)]
                         updated_board = update_board(board, move, color)
-                        moves.append(Move(row+1, col-1, updated_board))
+                        moves.append(Jump(row+1, col-1, updated_board))
                 if col < N-1:
                     if board[row+1][col+1] == '_':
                         move = [(row, col), (row+1, col+1)]
                         updated_board = update_board(board, move, color)
-                        moves.append(Move(row+1, col+1, updated_board))
+                        moves.append(Jump(row+1, col+1, updated_board))
 
         else:
             player = color
@@ -274,12 +254,12 @@ def non_capturing_moves(board, row, col, color, is_king):
                 if board[row-1][col-1] == '_':
                     move = [(row, col), (row-1, col-1)]
                     updated_board = update_board(board, move, color)
-                    moves.append(Move(row-1, col-1, updated_board))
+                    moves.append(Jump(row-1, col-1, updated_board))
             if col < N-1:
                 if board[row-1][col+1] == '_':
                     move = [(row, col), (row-1, col+1)]
                     updated_board = update_board(board, move, color)
-                    moves.append(Move(row-1, col+1, updated_board))
+                    moves.append(Jump(row-1, col+1, updated_board))
 
     return moves, is_king
 
@@ -297,12 +277,12 @@ def allowed_move_from_position(board, row, col):
         non_capturing, is_king = non_capturing_moves(board, row, col, color, is_king)
         moves = []
         for move in non_capturing:
-            moves.append([Move(row, col, board), move])
+            moves.append([Jump(row, col, board), move])
         moves_dict['non-capturing'] += moves
         return moves_dict
 
     else:
-        capturing_moves_tree = Move(row, col, board, capturing)
+        capturing_moves_tree = Jump(row, col, board, capturing)
 
         # explore possible moves until the disk (or king) has to stop
         while len(capturing) > 0:
@@ -374,6 +354,8 @@ def allowed_moves(board, color):
             [(1, 2), (3, 4)]
         ]
     """
+
+    # If one player has won, no more moves are possible
     moves_dict = {'capturing': [], 'non-capturing': []}
     N = len(board)
     for row in range(N):
@@ -387,12 +369,107 @@ def allowed_moves(board, color):
     else:
         return [[(move.row, move.col) for move in path] for path in moves_dict['capturing']]
 
+
+###############################################
+###############################################
+##########                           ##########
+##########     MINIMAX ALGORITHM     ##########
+##########                           ##########
+###############################################
+###############################################
+
+
+def next_color(color):
+	if color == 'w':
+		return 'b'
+	elif color == 'b':
+		return 'w'
+
+
+def score(board):
+	# Black is "max", White is "min"
+	# Returns the difference of number of black and white disks
+	# A king is equivalent to 2 disks
+    white = 0
+    black = 0
+
+    for row in board:
+    	for value in row:
+    		if value == "w":
+    			white += 1
+    		elif value == "W":
+    			white += 2
+    		elif value == "b":
+    			black += 1
+    		elif value == "B":
+    			black += 2
+
+    return black - white
+
+
+class State(object):
+	def __init__(self, board, color, depth=-1, value=None):
+		self.board = board
+		self.color = color
+		self.value = value
+		self.depth = depth
+		self.successors = {}
+
+		# Compute tree of successors with depth 6
+		moves = allowed_moves(self.board, self.color)
+		self.depth += 1
+		for move in moves:
+			if self.depth < 7:
+				updated_board = update_board(self.board, move, self.color)
+
+				successor = State(updated_board,
+								  next_color(self.color),
+								  self.depth)
+				self.successors[successor] = move
+
+
+	def __repr__(self):
+		return '\n'.join(self.board)
+
+	def set_value(self, value):
+		self.value = value
+
+
 def play(board, color):
-    """
-        Play must return the next move to play.
-        You can define here any strategy you would find suitable.
-    """
-    return random_play(board, color)
+	state = State(board, color)
+	minimax_score = max_value(state)
+	for key, move in state.successors.items():
+		if key.value == minimax_score:
+			return move
+
+
+def max_value(state):
+	if len(state.successors) == 0:
+		minimax_score = score(state.board)
+		state.set_value(minimax_score)
+		return minimax_score
+
+	else:
+		minimax_score = -1e10
+		for move in state.successors:
+			minimax_score = max(minimax_score, min_value(move))
+		state.set_value(minimax_score)
+		return minimax_score
+
+
+def min_value(state):
+	if len(state.successors) == 0:
+		minimax_score = score(state.board)
+		state.set_value(minimax_score)
+		return minimax_score
+
+	else:
+		minimax_score = 1e10
+		for move in state.successors:
+			minimax_score = min(minimax_score, max_value(move))
+		state.set_value(minimax_score)
+		return minimax_score
+
 
 def random_play(board, color):
     """
