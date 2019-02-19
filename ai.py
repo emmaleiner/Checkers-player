@@ -386,7 +386,7 @@ def next_color(color):
 		return 'w'
 
 
-def score(board):
+def score(board, color):
 	# Black is "max", White is "min"
 	# Returns the difference of number of black and white disks
 	# A king is equivalent to 2 disks
@@ -404,7 +404,11 @@ def score(board):
     		elif value == "B":
     			black += 2
 
-    return black - white
+    if color == 'b':
+        return black - white
+    else:
+        return white - black
+
 
 
 class State(object):
@@ -419,7 +423,7 @@ class State(object):
 		moves = allowed_moves(self.board, self.color)
 		self.depth += 1
 		for move in moves:
-			if self.depth < 7:
+			if self.depth < 6:
 				updated_board = update_board(self.board, move, self.color)
 
 				successor = State(updated_board,
@@ -437,36 +441,36 @@ class State(object):
 
 def play(board, color):
 	state = State(board, color)
-	minimax_score = max_value(state)
+	minimax_score = max_value(state, color)
 	for key, move in state.successors.items():
 		if key.value == minimax_score:
 			return move
 
 
-def max_value(state):
+def max_value(state, color):
 	if len(state.successors) == 0:
-		minimax_score = score(state.board)
+		minimax_score = score(state.board, color)
 		state.set_value(minimax_score)
 		return minimax_score
 
 	else:
 		minimax_score = -1e10
 		for move in state.successors:
-			minimax_score = max(minimax_score, min_value(move))
+			minimax_score = max(minimax_score, min_value(move, color))
 		state.set_value(minimax_score)
 		return minimax_score
 
 
-def min_value(state):
+def min_value(state, color):
 	if len(state.successors) == 0:
-		minimax_score = score(state.board)
+		minimax_score = score(state.board, color)
 		state.set_value(minimax_score)
 		return minimax_score
 
 	else:
 		minimax_score = 1e10
 		for move in state.successors:
-			minimax_score = min(minimax_score, max_value(move))
+			minimax_score = min(minimax_score, max_value(move, color))
 		state.set_value(minimax_score)
 		return minimax_score
 
